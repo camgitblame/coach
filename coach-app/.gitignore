@@ -1,0 +1,55 @@
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# python
+backend/.venv
+__pycache__/
+*.pyc
+
+# node / expo
+coach-app/node_modules
+coach-app/.expo
+coach-app/dist
+coach-app/.cache
+
+# system
+.DS_Store
+
+
+# Expo
+.expo
+dist/
+web-build/
