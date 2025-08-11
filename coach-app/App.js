@@ -1,99 +1,241 @@
 // coach-app/App.js
-import React, { useEffect, useRef, useState } from "react";
-import { SafeAreaView, Text, View, TouchableOpacity, Alert } from "react-native";
-import { connectToAgent } from "./lib/voice";
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { useConversation } from "@elevenlabs/react";
 
-const API_BASE = "https://4363a9813ccd.ngrok-free.app"; // current ngrok URL
+// set your agent id here
+const AGENT_ID = "agent_0501k2cak0jhfavb7vgqaghpfeb1";
+// if your network blocked WebRTC during testing, switch to "websocket"
+const CONNECTION_TYPE = "webrtc";
+
+const MODES = [
+  { key: "elevator", label: "Elevator Pitch", hint: "Explain who you are, what you do, and why it matters." },
+  { key: "lightning", label: "Lightning Talk", hint: "Share one idea clearly in under 2 minutes." },
+  { key: "demo", label: "Product Demo", hint: "Hook, problem, solution, and a simple call to action." },
+  { key: "update", label: "Project Update", hint: "Status, impact, risks, and next steps." },
+  { key: "defense", label: "Thesis Defense", hint: "Core claim, evidence, limitations, future work." },
+];
+
+const DEFAULT_FOCUS = ["Clarity", "Structure", "Pace", "Filler Words"];
 
 export default function App() {
-  const [metrics, setMetrics] = useState(null);
-  const [isVoiceConnected, setIsVoiceConnected] = useState(false);
-  const timer = useRef(null);
-  const voiceCleanup = useRef(null);
+  const [modeKey, setModeKey] = useState("elevator");
+  const [topic, setTopic] = useState("");
+  const [userName, setUserName] = useState("");
+  const [durationSec, setDurationSec] = useState(120);
+  const [focusAreas, setFocusAreas] = useState(DEFAULT_FOCUS);
+  const [transcript, setTranscript] = useState([]);
+
+  const [elapsed, setElapsed] = useState(0);
+  const timerRef = useRef(null);
+
+  const convo = useConversation({
+    onConnect: () => console.log("connected"),
+    onDisconnect: () => console.log("disconnected"),
+    onMessage: m => m?.text && setTranscript(t => [...t, m.text]),
+    onError: e => console.error("Agent error:", e),
+    onConnectionStateChange: s => console.log("connection:", s),
+  });
+
+  const mode = useMemo(() => MODES.find(m => m.key === modeKey) || MODES[0], [modeKey]);
 
   useEffect(() => {
-    timer.current = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_BASE}/metrics/current`, {
-          headers: {
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-        const data = await res.json();
-        setMetrics(data);
-      } catch (e) {
-        console.log("metrics fetch error", e);
-      }
-    }, 1500);
-    return () => { if (timer.current) clearInterval(timer.current); };
-  }, []);
-
-  const handleVoiceToggle = async () => {
-    if (isVoiceConnected) {
-      // Disconnect voice
-      if (voiceCleanup.current) {
-        voiceCleanup.current();
-        voiceCleanup.current = null;
-      }
-      setIsVoiceConnected(false);
+    if (convo.status === "connected") {
+      timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
     } else {
-      // Connect voice
-      try {
-        voiceCleanup.current = await connectToAgent();
-        setIsVoiceConnected(true);
-      } catch (error) {
-        Alert.alert("Connection Error", String(error?.message || error));
-      }
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+      setElapsed(0);
     }
-  };
+    return () => clearInterval(timerRef.current);
+  }, [convo.status]);
 
-  const pace = metrics?.pace_s_per_km ?? 0;
-  const paceStr = pace ? `${Math.floor(pace/60)}:${String(pace%60).padStart(2,"0")}/km` : "--";
+  function toggleFocus(item) {
+    setFocusAreas(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
+  }
+
+  function incDuration(delta) {
+    setDurationSec(d => Math.max(30, Math.min(600, d + delta)));
+  }
+
+  async function onBegin() {
+    if (Platform.OS !== "web") {
+      alert("Voice is enabled on web in this build.");
+      return;
+    }
+    setTranscript([]);
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      alert("Please allow microphone access.");
+      return;
+    }
+    await convo.startSession({
+      agentId: AGENT_ID,
+      connectionType: CONNECTION_TYPE,
+      metadata: {
+        context: {
+          speaker_name: userName || "Speaker",
+          mode: mode.label,
+          topic: topic || mode.hint,
+          duration_sec: durationSec || 120,
+          focus_areas: focusAreas?.length ? focusAreas : DEFAULT_FOCUS,
+        }
+      }
+    });
+  }
+
+  async function onEnd() {
+    await convo.endSession();
+  }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0b0f19" }}>
-      <View style={{ padding: 20 }}>
-        <Text style={{ color: "white", fontSize: 24, fontWeight: "700" }}>AI Running Coach</Text>
-        <View style={{ height: 16 }} />
-        <Row>
-          <Tile label="Heart Rate" value={metrics?.hr ?? "--"} suffix="bpm" />
-          <Tile label="Pace" value={paceStr} />
-        </Row>
-        <View style={{ height: 12 }} />
-        <Row>
-          <Tile label="Cadence" value={metrics?.cadence ?? "--"} suffix="spm" />
-          <Tile label="Distance" value={metrics?.distance_km?.toFixed?.(2) ?? "--"} suffix="km" />
-        </Row>
-        <View style={{ height: 24 }} />
-        <TouchableOpacity
-          style={{ 
-            backgroundColor: isVoiceConnected ? "#ff5b5b" : "#5b8aff", 
-            padding: 16, 
-            borderRadius: 14, 
-            alignItems: "center" 
-          }}
-          onPress={handleVoiceToggle}
-        >
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
-            {isVoiceConnected ? "Disconnect Voice Coach" : "Connect Voice Coach"}
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0e0e0e" }}>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <Text style={{ color: "white", fontSize: 24, fontWeight: "600", marginBottom: 4 }}>
+          Public Speaking Coach
+        </Text>
+        <Text style={{ color: "#bdbdbd", marginBottom: 16 }}>
+          ElevenLabs Agent, web only, no backend.
+        </Text>
+
+        {/* Config */}
+        <View style={{ backgroundColor: "#171717", borderRadius: 12, padding: 12, marginBottom: 12 }}>
+          <Text style={{ color: "white", marginBottom: 6 }}>Mode</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {MODES.map(m => (
+              <TouchableOpacity
+                key={m.key}
+                onPress={() => setModeKey(m.key)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  backgroundColor: modeKey === m.key ? "#4c8bf5" : "#2a2a2a",
+                }}
+              >
+                <Text style={{ color: "white" }}>{m.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={{ color: "white", marginTop: 12 }}>Topic</Text>
+          <TextInput
+            value={topic}
+            onChangeText={setTopic}
+            placeholder={mode.hint}
+            placeholderTextColor="#888"
+            style={{
+              marginTop: 6, backgroundColor: "#242424", borderRadius: 8, color: "white",
+              paddingHorizontal: 10, paddingVertical: 8,
+            }}
+          />
+
+          <Text style={{ color: "white", marginTop: 12 }}>Your name</Text>
+          <TextInput
+            value={userName}
+            onChangeText={setUserName}
+            placeholder="Optional"
+            placeholderTextColor="#888"
+            style={{
+              marginTop: 6, backgroundColor: "#242424", borderRadius: 8, color: "white",
+              paddingHorizontal: 10, paddingVertical: 8,
+            }}
+          />
+
+          <Text style={{ color: "white", marginTop: 12 }}>Duration target</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 6 }}>
+            <TouchableOpacity onPress={() => incDuration(-30)} style={{ backgroundColor: "#2a2a2a", padding: 8, borderRadius: 8 }}>
+              <Text style={{ color: "white" }}>-30s</Text>
+            </TouchableOpacity>
+            <Text style={{ color: "white" }}>
+              {Math.floor(durationSec / 60)} min {String(durationSec % 60).padStart(2, "0")}s
+            </Text>
+            <TouchableOpacity onPress={() => incDuration(30)} style={{ backgroundColor: "#2a2a2a", padding: 8, borderRadius: 8 }}>
+              <Text style={{ color: "white" }}>+30s</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={{ color: "white", marginTop: 12 }}>Focus areas</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+            {DEFAULT_FOCUS.map(f => {
+              const active = focusAreas.includes(f);
+              return (
+                <TouchableOpacity
+                  key={f}
+                  onPress={() => toggleFocus(f)}
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 12,
+                    borderRadius: 8,
+                    backgroundColor: active ? "#4caf50" : "#2a2a2a",
+                  }}
+                >
+                  <Text style={{ color: "white" }}>{f}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Controls */}
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+          {convo.status === "connected" ? (
+            <TouchableOpacity
+              onPress={onEnd}
+              style={{ backgroundColor: "#c84b4b", padding: 12, borderRadius: 8 }}
+            >
+              <Text style={{ color: "white", fontWeight: "600" }}>End Session</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={onBegin}
+              style={{ backgroundColor: "#4caf50", padding: 12, borderRadius: 8 }}
+            >
+              <Text style={{ color: "white", fontWeight: "600" }}>Begin Coaching</Text>
+            </TouchableOpacity>
+          )}
+
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "#171717",
+              borderRadius: 8,
+              padding: 10,
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: "white" }}>
+              Status: {convo.status}  |  Speaking: {convo.isSpeaking ? "yes" : "no"}
+            </Text>
+          </View>
+        </View>
+
+
+        {/* Session HUD */}
+        <View style={{ backgroundColor: "#171717", borderRadius: 12, padding: 12, marginBottom: 12 }}>
+          <Text style={{ color: "white", fontWeight: "600" }}>Session</Text>
+          <Text style={{ color: "#bdbdbd", marginTop: 4 }}>
+            Elapsed: {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")} / Target: {Math.floor(durationSec / 60)}:{String(durationSec % 60).padStart(2, "0")}
           </Text>
-        </TouchableOpacity>
-      </View>
+          <Text style={{ color: "#bdbdbd", marginTop: 4 }}>
+            Mode: {mode.label}  |  Focus: {focusAreas.join(", ")}
+          </Text>
+          <Text style={{ color: "#bdbdbd", marginTop: 4 }}>
+            Topic: {topic || mode.hint}
+          </Text>
+        </View>
+
+        {/* Captions */}
+        <View style={{ backgroundColor: "#171717", borderRadius: 12, padding: 12 }}>
+          <Text style={{ color: "white", fontWeight: "600", marginBottom: 8 }}>Live Captions</Text>
+          {transcript.map((line, idx) => (
+            <Text key={idx} style={{ color: "#ddd", marginBottom: 4 }}>
+              {line}
+            </Text>
+          ))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function Row({ children }) {
-  return <View style={{ flexDirection: "row", gap: 12 }}>{children}</View>;
-}
-
-function Tile({ label, value, suffix }) {
-  return (
-    <View style={{ flex: 1, backgroundColor: "#151a28", padding: 16, borderRadius: 14 }}>
-      <Text style={{ color: "#9aa4bf", fontSize: 13 }}>{label}</Text>
-      <Text style={{ color: "white", fontSize: 22, fontWeight: "700", marginTop: 6 }}>
-        {value}{suffix ? ` ${suffix}` : ""}
-      </Text>
-    </View>
   );
 }

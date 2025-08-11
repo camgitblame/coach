@@ -1,104 +1,134 @@
-# CoachAI - Sports Training Assistant
+# CoachAI - Public Speaking Coach
 
-A React Native app with FastAPI backend that provides real-time coaching with voice interaction using ElevenLabs AI.
+A React Native app that provides AI-powered public speaking coaching with real-time voice interaction using ElevenLabs conversational AI.
 
-## Setup
+## Features
 
+- **Multiple Speaking Modes**: Elevator Pitch, Lightning Talk, Product Demo, Project Update, Thesis Defense
+- **Real-time Voice Coaching**: ElevenLabs AI agent provides live feedback during practice sessions
+- **Customizable Sessions**: Set topic, duration, focus areas, and speaker name
+- **Live Captions**: See real-time transcription of conversations
+- **Cross-platform**: Works on iOS, Android, and web (voice features currently web-only)
 
-#### **Environment Setup** 
-**Set Up**:
+## Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- Expo CLI (`npm install -g @expo/cli`)
+
+### Setup
+
+1. **Clone and install dependencies**:
 ```bash
-cd coachAI
-rm -rf coach.venv
-python3 -m venv coach.venv
-source coach.venv/bin/activate
-pip install -r backend/requirements.txt
+cd coachAI/coach-app
+npm install
 ```
 
+2. **Configure ElevenLabs Agent**:
+   - Update `coach-app/lib/config.js` with your agent ID:
+   ```javascript
+   export const ELEVEN_AGENT_ID = "your_agent_id_here";
+   ```
 
-### Backend Setup
+3. **Start the app**:
 ```bash
-./scripts/run_backend.sh
-```
-
-# In a new terminal
-
-```bash
-./scripts/run_ngrok.sh
-```
-
-### Update URL
-Update the `API_BASE` URL in `coach-app/App.js` with ngrok URL.
-
-### Frontend Setup
-```bash
-cd coach-app
-npm install --legacy-peer-deps
 npx expo start
 ```
 
+4. **Run on web** (recommended for voice features):
+   - Press `w` in the Expo CLI or run `npx expo start --web`
+
+## How to Use
+
+1. **Select a speaking mode** from the available options:
+   - **Elevator Pitch**: Explain who you are, what you do, and why it matters
+   - **Lightning Talk**: Share one idea clearly in under 2 minutes  
+   - **Product Demo**: Hook, problem, solution, and call to action
+   - **Project Update**: Status, impact, risks, and next steps
+   - **Thesis Defense**: Core claim, evidence, limitations, future work
+
+2. **Configure your session**:
+   - Set your topic (or use the suggested prompt)
+   - Enter your name (optional)
+   - Adjust duration target (30 seconds to 10 minutes)
+   - Choose focus areas: Clarity, Structure, Pace, Filler Words
+
+3. **Begin coaching**:
+   - Allow microphone access when prompted
+   - The AI coach will guide you through a warmup
+   - Speak naturally while the AI provides minimal backchannel feedback
+   - Receive structured feedback after your target duration
+
 ## Configuration
 
-### ElevenLabs Voice Setup
+### ElevenLabs Agent Setup
 
-1. Create an agent in ElevenLabs and get your Agent ID
-2. Get your API key from your account settings
-3. Update `coach-app/lib/voice.js`:
+1. Create a conversational agent in [ElevenLabs](https://elevenlabs.io)
+2. Copy your Agent ID from the agent settings
+3. Update `coach-app/lib/config.js`:
 ```javascript
-const ELEVENLABS_AGENT_ID = 'agent_id';
-const ELEVENLABS_API_KEY = 'api_key';
+export const ELEVEN_AGENT_ID = "your_agent_id_here";
+```
+
+### Environment Variables (Optional)
+Copy `.env.example` to `.env` and configure:
+```bash
+ELEVENLABS_API_KEY=sk-your_api_key
+ELEVENLABS_AGENT_ID=agent_your_agent_id
 ```
 
 ## Project Structure
 
 ```
 coachAI/
-├── backend/          # FastAPI server
-│   ├── main.py       # Main API endpoints
-│   └── requirements.txt
-├── coach-app/        # React Native app
-│   ├── App.js        # Main app component
-│   ├── lib/
-│   │   └── voice.web.js
-  # ElevenLabs integration
-│   └── package.json
-├── coach.venv/       # venv
-└── scripts/          # Helper scripts
-    ├── run_backend.sh
-    └── run_ngrok.sh
+├── coach-app/           # React Native app (main application)
+│   ├── App.js          # Main app component with UI and conversation logic
+│   ├── index.js        # App entry point
+│   ├── package.json    # Dependencies and scripts
+│   ├── metro.config.js # Metro bundler configuration
+│   ├── .env.example    # Environment variables template
+│   ├── assets/         # App icons and images
+│   │   ├── icon.png
+│   │   ├── splash-icon.png
+│   │   ├── adaptive-icon.png
+│   │   └── favicon.png
+│   └── lib/            # Utility modules
+│       ├── config.js   # ElevenLabs agent configuration
+│       ├── voice.web.js    # Web voice integration
+│       └── voice.native.js # Native voice placeholder
+└── README.md           # Project documentation
 ```
 
-## API Endpoints
+### Key Dependencies
+- `@elevenlabs/react`: ElevenLabs React SDK for voice conversations
+- `expo`: React Native development platform
+- `react-native-webrtc`: WebRTC support for real-time communication
 
-- `GET /healthz` - Health check
-- `GET /metrics/current` - Current training metrics
-- `GET /plan/today` - Today's training plan
-- `POST /plan/update` - Update plan based on user input
-- `POST /journal/log` - Log training entries
-- `GET /journal` - View training journal
+## Development
 
-## Dev Commands
-
+### Available Scripts
 ```bash
-# Start backend
-./scripts/run_backend.sh
-
-# Start ngrok tunnel
-./scripts/run_ngrok.sh
-
-# Test API
-curl http://localhost:8000/healthz
-curl http://localhost:8000/metrics/current
-
-# Start React Native
-cd coach-app
+# Start development server
+npm start
+# or
 npx expo start
+
+# Run on specific platforms
+npx expo start --web    # Web browser
+npx expo start --ios    # iOS simulator  
+npx expo start --android # Android emulator
+
+# Build for production
+npx expo build
 ```
 
-## Features
-- **Real-time Metrics**: Heart rate, pace, cadence, distance tracking
-- **Adaptive Training Plans**: Plans adjust based on sleep, fatigue, and soreness
-- **Voice Coaching**: ElevenLabs AI-powered conversational coaching
-- **Training Journal**: Log and track training sessions
-- **Cross-platform**: Works on iOS, Android, and web
+### Testing Voice Features
+- Voice interaction currently works best on **web platform**
+- Ensure microphone permissions are granted
+- Use Chrome/Firefox for best WebRTC compatibility
+- Native mobile voice features are placeholder (will be implemented later)
+
+## License
+
+MIT License - see LICENSE file for details
 
