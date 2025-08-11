@@ -93,10 +93,10 @@ export default function App() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0e0e0e" }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
         <Text style={{ color: "white", fontSize: 24, fontWeight: "600", marginBottom: 4 }}>
-          Public Speaking Coach
+          CoachAI
         </Text>
         <Text style={{ color: "#bdbdbd", marginBottom: 16 }}>
-          ElevenLabs Agent, web only, no backend.
+          Public Speaking practice with AI feedback.
         </Text>
 
         {/* Config */}
@@ -190,7 +190,7 @@ export default function App() {
           ) : (
             <TouchableOpacity
               onPress={onBegin}
-              style={{ backgroundColor: "#4caf50", padding: 12, borderRadius: 8 }}
+              style={{ backgroundColor: "#4c8bf5", padding: 12, borderRadius: 8 }}
             >
               <Text style={{ color: "white", fontWeight: "600" }}>Begin Coaching</Text>
             </TouchableOpacity>
