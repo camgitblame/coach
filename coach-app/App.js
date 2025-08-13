@@ -3,9 +3,8 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useConversation } from "@elevenlabs/react";
 
-// set your agent id here
+// set agent id
 const AGENT_ID = "agent_0501k2cak0jhfavb7vgqaghpfeb1";
-// if your network blocked WebRTC during testing, switch to "websocket"
 const CONNECTION_TYPE = "webrtc";
 
 const MODES = [
@@ -70,6 +69,8 @@ export default function App() {
       alert("Please allow microphone access.");
       return;
     }
+
+    // Start the session with metadata (kept as-is)
     await convo.startSession({
       agentId: AGENT_ID,
       connectionType: CONNECTION_TYPE,
@@ -83,7 +84,22 @@ export default function App() {
         }
       }
     });
+
+    // immediately send a first user message with the same fields
+    try {
+      const ctx = {
+        speaker_name: userName || "Speaker",
+        mode: mode.label,
+        topic: topic || mode.hint,
+        duration_sec: durationSec || 120,
+        focus_areas: focusAreas?.length ? focusAreas : DEFAULT_FOCUS,
+      };
+      await convo.sendUserMessage?.(`[SESSION_CONTEXT] ${JSON.stringify(ctx)}`);
+    } catch (e) {
+      console.warn("Failed to send context message:", e);
+    }
   }
+
 
   async function onEnd() {
     await convo.endSession();
@@ -224,16 +240,6 @@ export default function App() {
           <Text style={{ color: "#bdbdbd", marginTop: 4 }}>
             Topic: {topic || mode.hint}
           </Text>
-        </View>
-
-        {/* Captions */}
-        <View style={{ backgroundColor: "#171717", borderRadius: 12, padding: 12 }}>
-          <Text style={{ color: "white", fontWeight: "600", marginBottom: 8 }}>Live Captions</Text>
-          {transcript.map((line, idx) => (
-            <Text key={idx} style={{ color: "#ddd", marginBottom: 4 }}>
-              {line}
-            </Text>
-          ))}
         </View>
       </ScrollView>
     </SafeAreaView>
