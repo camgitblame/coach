@@ -1,4 +1,4 @@
-# CoachAI - Public Speaking Coach
+# PSCoach - AI Public Speaking Coach
 
 A React Native app that provides AI-powered public speaking coaching with real-time voice interaction using ElevenLabs conversational AI.
 
