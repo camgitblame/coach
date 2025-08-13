@@ -27,7 +27,7 @@ export default function App() {
 
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
-
+  
   const convo = useConversation({
     onConnect: () => console.log("connected"),
     onDisconnect: () => console.log("disconnected"),
@@ -70,7 +70,6 @@ export default function App() {
       return;
     }
 
-    // Start the session with metadata (kept as-is)
     await convo.startSession({
       agentId: AGENT_ID,
       connectionType: CONNECTION_TYPE,
@@ -85,19 +84,15 @@ export default function App() {
       }
     });
 
-    // immediately send a first user message with the same fields
-    try {
-      const ctx = {
-        speaker_name: userName || "Speaker",
-        mode: mode.label,
-        topic: topic || mode.hint,
-        duration_sec: durationSec || 120,
-        focus_areas: focusAreas?.length ? focusAreas : DEFAULT_FOCUS,
-      };
-      await convo.sendUserMessage?.(`[SESSION_CONTEXT] ${JSON.stringify(ctx)}`);
-    } catch (e) {
-      console.warn("Failed to send context message:", e);
-    }
+    // Non-interrupting context (safe to send right away)
+    const ctx = {
+      speaker_name: userName || "Speaker",
+      mode: mode.label,
+      topic: topic || mode.hint,
+      duration_sec: durationSec || 120,
+      focus_areas: focusAreas?.length ? focusAreas : DEFAULT_FOCUS,
+    };
+    await convo.sendContextualUpdate?.(`[SESSION_CONTEXT] ${JSON.stringify(ctx)}`);
   }
 
 
