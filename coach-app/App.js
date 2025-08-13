@@ -126,7 +126,7 @@ export default function App() {
           </Text>
         </View>
         <Text style={{ color: "#bdbdbd", marginBottom: 16 }}>
-          Public speaking practice with AI feedback.
+          Public speaking practice with AI feedback
         </Text>
 
         {/* Divider */}
