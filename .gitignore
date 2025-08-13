@@ -75,3 +75,4 @@ logs
 # Temporary files
 *.tmp
 *.temp
+coach-app/package-lock.json
