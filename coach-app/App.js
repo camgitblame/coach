@@ -2,6 +2,7 @@
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useConversation } from "@elevenlabs/react";
+import Svg, { Path } from "react-native-svg";
 
 // agent id
 const AGENT_ID = process.env.EXPO_PUBLIC_ELEVENLABS_AGENT_ID ?? "agent_0501k2cak0jhfavb7vgqaghpfeb1";
@@ -16,6 +17,21 @@ const MODES = [
 ];
 
 const DEFAULT_FOCUS = ["Clarity", "Structure", "Pace", "Filler Words"];
+
+// Icon
+function LogoIcon({ size = 24, color = "#4c8bf5" }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      {/* simple microphone icon */}
+      <Path
+        d="M12 14a3 3 0 003-3V7a3 3 0 10-6 0v4a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 0014 0h-2zM11 19h2v3h-2v-3z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
+// Main App component
 
 export default function App() {
   const [modeKey, setModeKey] = useState("elevator");
@@ -103,12 +119,19 @@ export default function App() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#0e0e0e" }}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={{ color: "white", fontSize: 24, fontWeight: "600", marginBottom: 4 }}>
-          CoachAI
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <LogoIcon />
+          <Text style={{ color: "white", fontSize: 24, fontWeight: "600" }}>
+            PS Coach
+          </Text>
+        </View>
         <Text style={{ color: "#bdbdbd", marginBottom: 16 }}>
-          Public Speaking practice with AI feedback.
+          Public speaking practice with AI feedback.
         </Text>
+
+        {/* Divider */}
+        <View style={{ height: 1, backgroundColor: "#212121", marginVertical: 12 }} />
+
 
         {/* Config */}
         <View style={{ backgroundColor: "#171717", borderRadius: 12, padding: 12, marginBottom: 12 }}>
@@ -188,6 +211,9 @@ export default function App() {
             })}
           </View>
         </View>
+
+        {/* Divider */}
+        <View style={{ height: 1, backgroundColor: "#212121", marginVertical: 12 }} />
 
         {/* Controls */}
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
