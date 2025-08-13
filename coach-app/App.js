@@ -3,8 +3,8 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useConversation } from "@elevenlabs/react";
 
-// set agent id
-const AGENT_ID = "agent_0501k2cak0jhfavb7vgqaghpfeb1";
+// agent id
+const AGENT_ID = process.env.EXPO_PUBLIC_ELEVENLABS_AGENT_ID ?? "agent_0501k2cak0jhfavb7vgqaghpfeb1";
 const CONNECTION_TYPE = "webrtc";
 
 const MODES = [
@@ -84,7 +84,7 @@ export default function App() {
       }
     });
 
-    // Non-interrupting context (safe to send right away)
+    // Non-interrupting context 
     const ctx = {
       speaker_name: userName || "Speaker",
       mode: mode.label,
