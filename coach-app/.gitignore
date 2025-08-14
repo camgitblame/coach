@@ -48,7 +48,6 @@ coach-app/.cache
 # system
 .DS_Store
 
-
 # Expo
 .expo
 dist/
