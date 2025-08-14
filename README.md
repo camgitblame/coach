@@ -1,6 +1,6 @@
 # PS Coach: AI Public Speaking Coach
 
-A React Native app that provides AI-powered public speaking coaching with real-time voice interaction using ElevenLabs conversational AI.
+A React Native app for practicing public speaking with real-time voice coaching using the ElevenLabs Agent and React SDK
 
 ## Features
 
