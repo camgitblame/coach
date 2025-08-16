@@ -233,6 +233,7 @@ export default function App() {
     onMessage: m => m?.text && setTranscript(t => [...t, m.text]),
     onError: e => console.error("Agent error:", e),
     onConnectionStateChange: s => console.log("connection:", s),
+    onDebug: (message) => console.log("Debug:", message),
   });
 
   const mode = useMemo(() => MODES.find(m => m.key === modeKey) || MODES[0], [modeKey]);
