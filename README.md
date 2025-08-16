@@ -1,19 +1,19 @@
-# PS Coach: AI-Powered Public Speaking Coach
+# PS Coach: AI Public Speaking Coach
 
-A React Native app for practicing public speaking with real-time voice coaching using ElevenLabs Conversational AI and post-session analysis powered by LangChain + OpenAI.
+A React Native app for practicing public speaking with real-time voice coaching using ElevenLabs Conversational AI and post-session analysis with OpenAI API.
 
 ## Features
 
 - Modes for different public speaking tasks: Elevator Pitch, Lightning Talk, Product Demo, Project Update, Thesis Defense
 - Live coaching while users speak
 - Simple session setup: topic, duration, and focus areas
-- Personalized feedback and scoring after each session using LangChain + OpenAI integration
+- Personalized feedback and scoring after each session using OpenAI API integration
 
 ## Tech Stack
 
 - **Frontend**: React Native with Expo (web via React Native for Web)
 - **Real-time Voice**: ElevenLabs Conversational AI (`@elevenlabs/react`)
-- **AI Analysis**: LangChain + OpenAI (`@langchain/openai`, `@langchain/core`)
+- **AI Analysis**: OpenAI API integration (gpt-3.5-turbo)
 - **LLM Model**: GPT-3.5-turbo for post-session feedback
 - **Transport**: WebRTC with WebSocket fallback
 
@@ -73,7 +73,7 @@ npx expo start --web
    - Receive real-time encouragement and guidance
 
 4. **Get AI-powered analysis:**
-   - After your session, receive detailed feedback on:
+   - After your session, receive feedback on:
       - **Strengths**: What you did well
       - **Improvements**: Specific areas to work on
       - **Next Steps**: Actionable recommendations
@@ -94,7 +94,7 @@ coachAI/
 │   ├── assets/         # App icons and images
 │   ├── lib/            # Utility modules
 │   │   ├── config.js   # ElevenLabs agent configuration
-│   │   ├── analysis.js # LangChain + OpenAI session analysis
+│   │   ├── analysis.js # penAI API session analysis
 │   │   ├── voice.web.js    # Web voice integration
 │   │   └── voice.native.js # Native voice integration
 │   └── web-dist/       # Web export output 
@@ -130,9 +130,9 @@ The app is deployed with Vercel at https://pscoach.vercel.app/
 - **Voice interaction** works best on web browsers
 - **Microphone permission** is required for voice coaching
 - **Browser compatibility**: Chrome and Firefox recommended for WebRTC
-- **Post-session Analysis**: Requires OpenAI API key for AI-powered feedback. A demo analysis available when OpenAI API is unavailable.
+- **Post-session Analysis**: Requires OpenAI API key for AI-powered feedback. Demo analysis available when OpenAI API is unavailable
 
 
-
+```
 
 
