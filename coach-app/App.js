@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useConversation } from "@elevenlabs/react";
 import Svg, { Path } from "react-native-svg";
+import { analyzeSession } from "./lib/analysis";
 
 // ===== THEME 
 const theme = {
@@ -222,6 +223,10 @@ export default function App() {
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
 
+  // Analysis state
+  const [sessionAnalysis, setSessionAnalysis] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   const convo = useConversation({
     onConnect: () => console.log("connected"),
     onDisconnect: () => console.log("disconnected"),
@@ -256,7 +261,12 @@ export default function App() {
       alert("Voice is enabled on web in this build.");
       return;
     }
+    
+    // Clear previous session data
     setTranscript([]);
+    setSessionAnalysis("");
+    setIsAnalyzing(false);
+    
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
@@ -290,6 +300,27 @@ export default function App() {
 
   async function onEnd() {
     await convo.endSession();
+    
+    // Trigger analysis if we have session data
+    if (transcript.length > 0 || elapsed > 10) {
+      setIsAnalyzing(true);
+      try {
+        const analysis = await analyzeSession({
+          speakerName: userName,
+          mode: mode.label,
+          topic: topic || mode.hint,
+          duration: elapsed,
+          focusAreas: focusAreas,
+          transcript: transcript,
+        });
+        setSessionAnalysis(analysis);
+      } catch (error) {
+        console.error("Analysis failed:", error);
+        setSessionAnalysis("Analysis temporarily unavailable. Great job practicing!");
+      } finally {
+        setIsAnalyzing(false);
+      }
+    }
   }
 
   return (
@@ -410,6 +441,21 @@ export default function App() {
             </Text>
           </View>
         </Card>
+
+        {/* Session Analysis */}
+        {(sessionAnalysis || isAnalyzing) && (
+          <Card elevated>
+            <Text style={styles.hudTitle}>✨ Session Analysis</Text>
+            {isAnalyzing ? (
+              <View style={styles.analysisLoading}>
+                <Text style={styles.analysisLoadingText}>🔍 Analyzing your session...</Text>
+                <Text style={styles.analysisSubtext}>This may take a few moments</Text>
+              </View>
+            ) : (
+              <Text style={styles.analysisText}>{sessionAnalysis}</Text>
+            )}
+          </Card>
+        )}
 
         {/* Credit Footer */}
         <View style={styles.footer}>
@@ -617,6 +663,27 @@ const styles = StyleSheet.create({
   hudLabel: {
     color: theme.text,
     fontWeight: "500",
+  },
+  analysisLoading: {
+    alignItems: "center",
+    paddingVertical: theme.space5,
+  },
+  analysisLoadingText: {
+    color: theme.accent,
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: theme.space2,
+  },
+  analysisSubtext: {
+    color: theme.textSecondary,
+    fontSize: 14,
+  },
+  analysisText: {
+    color: theme.text,
+    fontSize: 14,
+    lineHeight: 22,
+    letterSpacing: 0.25,
+    textAlign: "left",
   },
   footer: {
     alignItems: "center",

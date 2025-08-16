@@ -76,3 +76,4 @@ logs
 *.tmp
 *.temp
 coach-app/package-lock.json
+package-lock.json
