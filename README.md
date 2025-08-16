@@ -7,7 +7,7 @@ A React Native app for practicing public speaking with real-time voice coaching 
 - Modes for different public speaking tasks: Elevator Pitch, Lightning Talk, Product Demo, Project Update, Thesis Defense
 - Live coaching while users speak
 - Simple session setup: topic, duration, and focus areas
-- Personalized feedback and scoring after each session using OpenAI API integration
+- Personalized feedback and scoring after each session using OpenAI API 
 
 ## Tech Stack
 
@@ -38,8 +38,8 @@ npm install
    cp .env.example .env
    ```
 
-   **ElevenLabs Setup**: Add agent ID to `ELEVENLABS_AGENT_ID` in `.env`
-   **OpenAI Setup**: Add API key to `EXPO_PUBLIC_OPENAI_API_KEY` in `.env`
+   - **ElevenLabs**: Add agent ID to `ELEVENLABS_AGENT_ID` in `.env`
+   - **OpenAI**: Add API key to `EXPO_PUBLIC_OPENAI_API_KEY` in `.env`
 
 3. **Start the development server:**
 ```bash
