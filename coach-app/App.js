@@ -3,7 +3,7 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useConversation } from "@elevenlabs/react";
 import Svg, { Path } from "react-native-svg";
-import { analyzeSession } from "./lib/analysis";
+import { analyzeSession } from "./lib/analysis.js";
 
 // ===== THEME 
 const theme = {
