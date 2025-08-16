@@ -130,9 +130,4 @@ The app is deployed with Vercel at https://pscoach.vercel.app/
 - **Voice interaction** works best on web browsers
 - **Microphone permission** is required for voice coaching
 - **Browser compatibility**: Chrome and Firefox recommended for WebRTC
-- **Post-session Analysis**: Requires OpenAI API key for AI-powered feedback. Demo analysis available when OpenAI API is unavailable
-
-
-```
-
-
+- **Post-session Analysis**: Requires OpenAI API key for AI-powered feedback. Demo analysis available when OpenAI API is unavailable.
