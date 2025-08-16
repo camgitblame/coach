@@ -68,11 +68,7 @@ logs
 .env.test.local
 .env.production.local
 
-# API Keys (make sure not to commit sensitive data)
-# Add any files containing API keys or secrets
-
 # Temporary files
 *.tmp
 *.temp
-coach-app/package-lock.json
 package-lock.json
