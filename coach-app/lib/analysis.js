@@ -3,29 +3,42 @@
 
 // Create analysis prompt 
 function createAnalysisPrompt(sessionData) {
-  return `As a professional public speaking coach, analyze this practice session and provide detailed feedback:
+  const hasTranscript = sessionData.transcript && sessionData.transcript.length > 0;
+  
+  let prompt = `You are a professional public speaking coach analyzing a completed practice session. This was a real speaking practice session, not a video or hypothetical scenario.
 
-Session Details:
-- Mode: ${sessionData.mode}
+SESSION DETAILS:
+- Speaking Mode: ${sessionData.mode}
 - Topic: "${sessionData.topic}"
-- Duration: ${Math.floor(sessionData.duration/60)}:${String(sessionData.duration%60).padStart(2,'0')}
+- Duration: ${Math.floor(sessionData.duration/60)} minutes ${sessionData.duration%60} seconds
 - Speaker: ${sessionData.speakerName || "Practitioner"}
-- Focus Areas: ${sessionData.focusAreas.join(", ")}
+- Focus Areas: ${sessionData.focusAreas.join(", ")}`;
 
-Please provide coaching feedback in this format:
+  if (hasTranscript) {
+    prompt += `
+- Session Transcript: "${sessionData.transcript.join(' ')}"`;
+  }
+
+  prompt += `
+
+IMPORTANT: This was an actual speaking practice session that just completed. Provide specific, actionable feedback based on the session details above.
+
+Please provide coaching feedback in this exact format:
 
 STRENGTHS:
-- What went well in this practice session
+- [List what went well in this practice session]
 
 IMPROVEMENTS:
-- Specific areas to work on based on the focus areas
+- [List specific areas to work on based on the focus areas: ${sessionData.focusAreas.join(", ")}]
 
 NEXT STEPS:
-- Actionable suggestions for improvement
+- [Provide actionable suggestions for the next practice session]
 
 SCORE: X/10
 
-Keep feedback encouraging, specific, and actionable.`;
+Keep feedback encouraging, specific, and actionable. Base your analysis on the actual session data provided, not hypothetical scenarios.`;
+
+  return prompt;
 }
 
 export async function analyzeSession(sessionData) {
@@ -63,7 +76,7 @@ export async function analyzeSession(sessionData) {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert public speaking coach with years of experience helping people improve their presentation skills. Provide constructive, encouraging, and specific feedback.'
+            content: 'You are an expert public speaking coach who analyzes completed practice sessions. Provide constructive, encouraging, and specific feedback based on actual session data. Never provide hypothetical or generic advice - always base your analysis on the specific session details provided.'
           },
           {
             role: 'user',
@@ -79,9 +92,20 @@ export async function analyzeSession(sessionData) {
       const data = await response.json();
       
       if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+        let analysisText = data.choices[0].message.content;
+        
+        // Clean up markdown formatting for better readability
+        analysisText = analysisText
+          .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove **bold** formatting
+          .replace(/\*(.*?)\*/g, '$1')      // Remove *italic* formatting
+          .replace(/`(.*?)`/g, '$1')        // Remove `code` formatting
+          .replace(/_{1,2}(.*?)_{1,2}/g, '$1') // Remove _underline_ formatting
+          .replace(/\n\s*\n\s*\n/g, '\n\n') // Clean up excessive line breaks
+          .trim();
+        
         return `AI Analysis via OpenAI
 
-${data.choices[0].message.content}
+${analysisText}
 
 Session Summary:
 - Mode: ${sessionData.mode}
@@ -160,9 +184,20 @@ async function tryHuggingFaceAnalysis(sessionData) {
       const data = await response.json();
       
       if (data && data[0] && data[0].generated_text) {
+        let analysisText = data[0].generated_text;
+        
+        // Clean up markdown formatting for better readability
+        analysisText = analysisText
+          .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove **bold** formatting
+          .replace(/\*(.*?)\*/g, '$1')      // Remove *italic* formatting
+          .replace(/`(.*?)`/g, '$1')        // Remove `code` formatting
+          .replace(/_{1,2}(.*?)_{1,2}/g, '$1') // Remove _underline_ formatting
+          .replace(/\n\s*\n\s*\n/g, '\n\n') // Clean up excessive line breaks
+          .trim();
+        
         return `AI Analysis via Hugging Face
 
-${data[0].generated_text}
+${analysisText}
 
 Session Summary:
 - Mode: ${sessionData.mode}
@@ -171,7 +206,7 @@ Session Summary:
 - Focus Areas: ${sessionData.focusAreas.join(", ")}
 
 ---
-Powered by Hugging Face (Mistral-7B)`;
+Powered by Hugging Face (DialoGPT)`;
       }
     } else {
       const errorData = await response.json().catch(() => ({}));
@@ -186,7 +221,7 @@ Powered by Hugging Face (Mistral-7B)`;
   }
 }
 
-// Try Google Gemini free tier
+// Try Google Gemini
 async function tryGeminiAnalysis(sessionData) {
   try {
     const geminiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -204,7 +239,9 @@ async function tryGeminiAnalysis(sessionData) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: prompt
+            text: `You are an expert public speaking coach. You analyze completed practice sessions and provide constructive feedback. Always base your analysis on the actual session data provided, never on hypothetical scenarios.
+
+${prompt}`
           }]
         }],
         generationConfig: {
@@ -218,9 +255,20 @@ async function tryGeminiAnalysis(sessionData) {
       const data = await response.json();
       
       if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+        let analysisText = data.candidates[0].content.parts[0].text;
+        
+        // Clean up markdown formatting for better readability
+        analysisText = analysisText
+          .replace(/\*\*(.*?)\*\*/g, '$1')  // Remove **bold** formatting
+          .replace(/\*(.*?)\*/g, '$1')      // Remove *italic* formatting
+          .replace(/`(.*?)`/g, '$1')        // Remove `code` formatting
+          .replace(/_{1,2}(.*?)_{1,2}/g, '$1') // Remove _underline_ formatting
+          .replace(/\n\s*\n\s*\n/g, '\n\n') // Clean up excessive line breaks
+          .trim();
+        
         return `AI Analysis via Google Gemini
 
-${data.candidates[0].content.parts[0].text}
+${analysisText}
 
 Session Summary:
 - Mode: ${sessionData.mode}
@@ -229,7 +277,7 @@ Session Summary:
 - Focus Areas: ${sessionData.focusAreas.join(", ")}
 
 ---
-Powered by Google Gemini (Free Tier)`;
+Powered by Google Gemini`;
       }
     }
     

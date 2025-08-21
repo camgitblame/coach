@@ -449,7 +449,7 @@ export default function App() {
             <Text style={styles.hudTitle}>✨ Session Analysis</Text>
             {isAnalyzing ? (
               <View style={styles.analysisLoading}>
-                <Text style={styles.analysisLoadingText}>🔍 Analyzing your session...</Text>
+                <Text style={styles.analysisLoadingText}>Analyzing your session...</Text>
                 <Text style={styles.analysisSubtext}>This may take a few moments</Text>
               </View>
             ) : (
