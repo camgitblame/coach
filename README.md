@@ -43,7 +43,7 @@ npm install
 
 2. **Configure AI Services:**
 
-   Create a `.env` file in the coach-app directory:
+   Create a `.env` file in coach-app:
    ```bash
    cp .env.example .env
    ```
@@ -65,12 +65,12 @@ npx expo start --web
 
 ## How to Use
 
-1. **Choose a speaking mode:**
-   - Elevator Pitch (30s-2min): Quick personal/product introduction
-   - Lightning Talk (3-5min): Concise technical presentation
-   - Product Demo (2-10min): Software or product walkthrough
-   - Project Update (1-5min): Status report for teams
-   - Thesis Defense (5-10min): Academic argument presentation
+1. **Choose a public speaking mode:**
+   - Elevator Pitch: Quick personal/product introduction
+   - Lightning Talk: Concise technical presentation
+   - Product Demo: Software or product walkthrough
+   - Project Update: Status report for teams
+   - Thesis Defense: Academic argument presentation
 
 2. **Configure your session:**
    - **Topic**: What you'll be speaking about
@@ -85,7 +85,7 @@ npx expo start --web
    - Receive real-time voice guidance
 
 4. **Get AI-powered analysis:**
-   - After your session, receive feedback on:
+   - After each session, receive feedback on:
       - **Strengths**: What you did well
       - **Improvements**: Specific areas to work on
       - **Next Steps**: Actionable recommendations
@@ -96,16 +96,16 @@ npx expo start --web
 ```
 coachAI/
 ├── coach-app/          
-│   ├── App.js          # Main app component with Material Design UI
+│   ├── App.js          # Main app component 
 │   ├── index.js        # App entry point
 │   ├── package.json    # Dependencies and scripts
-│   ├── metro.config.js # Metro bundler configuration
-│   ├── vercel.json     # Vercel deployment config
+│   ├── metro.config.js # Metro bundler config
+│   ├── vercel.json     # Vercel config
 │   ├── .env.example    # Environment variables template
 │   ├── assets/         # App icons and images
 │   ├── lib/            # Utility modules
-│   │   ├── config.js   # ElevenLabs agent configuration
-│   │   ├── analysis.js # Multi-model AI analysis (Gemini, Hugging Face, OpenAI)
+│   │   ├── config.js   # ElevenLabs agent config
+│   │   ├── analysis.js # AI analysis (Gemini, Hugging Face, OpenAI)
 │   │   ├── voice.web.js    # Web voice integration
 │   │   └── voice.native.js # Native voice integration
 │   └── web-dist/       # Web export output 
