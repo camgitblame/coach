@@ -11,7 +11,6 @@ export function useSpeakingCoachVoice({ onMessage }) {
       if (m?.text && onMessage) onMessage(m.text);
     },
     onError: (e) => {
-      // You can surface this to the UI if you prefer
       console.error("ElevenLabs conversation error:", e);
     },
   });

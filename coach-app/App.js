@@ -1,6 +1,6 @@
 // coach-app/App.js
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Linking } from "react-native";
 import { useConversation } from "@elevenlabs/react";
 import Svg, { Path } from "react-native-svg";
 import { analyzeSession } from "./lib/analysis";
@@ -460,7 +460,16 @@ export default function App() {
 
         {/* Credit Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Developed by Cam Nguyen © 2025</Text>
+          <Text style={styles.footerText}>
+            Developed by{' '}
+            <TouchableOpacity 
+              onPress={() => Linking.openURL('https://camgitblame.netlify.app/')}
+              style={styles.linkContainer}
+            >
+              <Text style={styles.footerLink}>Cam Nguyen</Text>
+            </TouchableOpacity>
+            {' '}© 2025
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -475,6 +484,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: theme.space2,
   },
   title: {
@@ -489,6 +499,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: theme.space6,
     lineHeight: 24,
+    textAlign: "center",
   },
   divider: {
     height: 1,
@@ -699,5 +710,18 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     letterSpacing: 0.5,
     textTransform: "uppercase",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  linkContainer: {
+    display: "inline",
+  },
+  footerLink: {
+    color: theme.accent,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+    textDecorationLine: "underline",
   },
 });
