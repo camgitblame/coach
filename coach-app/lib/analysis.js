@@ -30,11 +30,19 @@ Keep feedback encouraging, specific, and actionable.`;
 
 export async function analyzeSession(sessionData) {
   try {
-    // Check for OpenAI API key
+    // Try Hugging Face first (free)
+    const hfResult = await tryHuggingFaceAnalysis(sessionData);
+    if (hfResult) return hfResult;
+
+    // Fallback to Gemini (free tier)
+    const geminiResult = await tryGeminiAnalysis(sessionData);
+    if (geminiResult) return geminiResult;
+
+    // Check for OpenAI API key as last resort
     const openAIKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
     
     if (!openAIKey) {
-      console.log("No OpenAI API key found, using demo analysis");
+      console.log("No API keys found, using demo analysis");
       return generateDemoAnalysis(sessionData);
     }
 
@@ -118,6 +126,119 @@ ${generateDemoAnalysis(sessionData)}`;
     // For any other error, fall back to demo analysis
     console.log("OpenAI request failed, using demo analysis");
     return generateDemoAnalysis(sessionData);
+  }
+}
+
+// Try Hugging Face free inference API
+async function tryHuggingFaceAnalysis(sessionData) {
+  try {
+    const hfKey = process.env.EXPO_PUBLIC_HUGGINGFACE_API_KEY;
+    if (!hfKey) return null;
+
+    console.log("Requesting AI analysis from Hugging Face...");
+
+    const prompt = createAnalysisPrompt(sessionData);
+    
+    // Using a simpler, more available model
+    const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-small', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${hfKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: prompt,
+        parameters: {
+          max_new_tokens: 500,
+          temperature: 0.7,
+          do_sample: true,
+          return_full_text: false,
+        },
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data && data[0] && data[0].generated_text) {
+        return `AI Analysis via Hugging Face
+
+${data[0].generated_text}
+
+Session Summary:
+- Mode: ${sessionData.mode}
+- Topic: "${sessionData.topic}"
+- Duration: ${Math.floor(sessionData.duration/60)}:${String(sessionData.duration%60).padStart(2,'0')}
+- Focus Areas: ${sessionData.focusAreas.join(", ")}
+
+---
+Powered by Hugging Face (Mistral-7B)`;
+      }
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      console.log("Hugging Face error:", response.status, errorData);
+    }
+    
+    console.log("Hugging Face request failed, trying next option");
+    return null;
+  } catch (error) {
+    console.error("Hugging Face analysis error:", error);
+    return null;
+  }
+}
+
+// Try Google Gemini free tier
+async function tryGeminiAnalysis(sessionData) {
+  try {
+    const geminiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    if (!geminiKey) return null;
+
+    console.log("Requesting AI analysis from Google Gemini...");
+
+    const prompt = createAnalysisPrompt(sessionData);
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+        }
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+        return `AI Analysis via Google Gemini
+
+${data.candidates[0].content.parts[0].text}
+
+Session Summary:
+- Mode: ${sessionData.mode}
+- Topic: "${sessionData.topic}"
+- Duration: ${Math.floor(sessionData.duration/60)}:${String(sessionData.duration%60).padStart(2,'0')}
+- Focus Areas: ${sessionData.focusAreas.join(", ")}
+
+---
+Powered by Google Gemini (Free Tier)`;
+      }
+    }
+    
+    console.log("Gemini request failed, trying next option");
+    return null;
+  } catch (error) {
+    console.error("Gemini analysis error:", error);
+    return null;
   }
 }
 
