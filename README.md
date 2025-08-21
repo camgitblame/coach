@@ -1,21 +1,32 @@
 # PS Coach: AI Public Speaking Coach
 
-A React Native app for practicing public speaking with real-time voice coaching using ElevenLabs Conversational AI and post-session analysis with OpenAI API.
+A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM analysis (Gemini, Hugging Face, OpenAI) for public speaking practice.
 
 ## Features
 
 - Modes for different public speaking tasks: Elevator Pitch, Lightning Talk, Product Demo, Project Update, Thesis Defense
-- Live coaching while users speak
+- Live coaching while users speak using ElevenLabs AI agent
 - Simple session setup: topic, duration, and focus areas
-- Personalized feedback and scoring after each session using OpenAI API 
+- Post-session analysis with multiple LLM options:
+  - Google Gemini 
+  - Hugging Face DialoGPT 
+  - OpenAI GPT-3.5-turbo
+  - Demo analysis 
 
 ## Tech Stack
 
-- **Frontend**: React Native with Expo (web via React Native for Web)
-- **Real-time Voice**: ElevenLabs Conversational AI (`@elevenlabs/react`)
-- **AI Analysis**: OpenAI API integration (gpt-3.5-turbo)
-- **LLM Model**: GPT-3.5-turbo for post-session feedback
-- **Transport**: WebRTC with WebSocket fallback
+**Frontend**
+- React Native with Expo 
+- React Native Web
+- JavaScript
+
+**Voice & AI**
+- ElevenLabs React SDK 
+- WebRTC 
+- Google Gemini 1.5 Flash 
+- Hugging Face DiabloGPT
+- OpenAI GPT-3.5-turbo 
+- LangChain integration
 
 ## Quick Start
 
@@ -31,15 +42,17 @@ cd coachAI/coach-app
 npm install
 ```
 
-2. **Configure AI Service:**
+2. **Configure AI Services:**
 
    Create a `.env` file in the coach-app directory:
    ```bash
    cp .env.example .env
    ```
-
-   - **ElevenLabs**: Add agent ID to `ELEVENLABS_AGENT_ID` in `.env`
-   - **OpenAI**: Add API key to `EXPO_PUBLIC_OPENAI_API_KEY` in `.env`
+   In `.env`: 
+   - Add ElevenLabs agent ID to `ELEVENLABS_AGENT_ID`
+   - Add Google Gemini API key to `EXPO_PUBLIC_GEMINI_API_KEY` 
+   - Add Hugging Face token to `EXPO_PUBLIC_HUGGINGFACE_API_KEY`  
+   - Add OpenAI API key to `EXPO_PUBLIC_OPENAI_API_KEY` 
 
 3. **Start the development server:**
 ```bash
@@ -64,21 +77,20 @@ npx expo start --web
    - **Topic**: What you'll be speaking about
    - **Your name**: For personalized coaching
    - **Duration**: Target length (30 seconds to 10 minutes)
-   - **Focus areas**: Choose from Clarity, Structure, Pace, Body Language, Eye Contact, Filler Words
+   - **Focus areas**: Choose from Clarity, Structure, Pace, Filler Words
 
 3. **Practice with live AI coaching:**
    - Allow microphone access when prompted
    - The AI coach greets you and guides the session
    - Speak naturally about your topic
-   - Receive real-time encouragement and guidance
+   - Receive real-time voice guidance
 
 4. **Get AI-powered analysis:**
    - After your session, receive feedback on:
       - **Strengths**: What you did well
       - **Improvements**: Specific areas to work on
       - **Next Steps**: Actionable recommendations
-      - **Score**: Performance rating
-
+      - **Score**: Performance rating out of 10
 
 ## Project Structure
 
@@ -94,7 +106,7 @@ coachAI/
 │   ├── assets/         # App icons and images
 │   ├── lib/            # Utility modules
 │   │   ├── config.js   # ElevenLabs agent configuration
-│   │   ├── analysis.js # penAI API session analysis
+│   │   ├── analysis.js # Multi-model AI analysis (Gemini, Hugging Face, OpenAI)
 │   │   ├── voice.web.js    # Web voice integration
 │   │   └── voice.native.js # Native voice integration
 │   └── web-dist/       # Web export output 
@@ -127,7 +139,8 @@ The app is deployed with Vercel at https://pscoach.vercel.app/
 
 ## Notes
 
-- **Voice interaction** works best on web browsers
-- **Microphone permission** is required for voice coaching
-- **Browser compatibility**: Chrome and Firefox recommended for WebRTC
-- **Post-session Analysis**: Requires OpenAI API key for AI-powered feedback. Demo analysis available when OpenAI API is unavailable.
+- Voice interaction works best on web browsers
+- Microphone permission is required for voice coaching
+- Chrome and Firefox recommended for WebRTC
+- Post-session analysis works with free Google Gemini and Hugging Face APIs. Demo analysis available when no API keys are provided.
+
