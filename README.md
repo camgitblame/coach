@@ -17,7 +17,6 @@ A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM an
 
 **Frontend**
 - React Native with Expo 
-- React Native Web
 - JavaScript
 
 **Voice & AI**
