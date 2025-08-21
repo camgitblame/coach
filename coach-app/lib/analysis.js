@@ -1,7 +1,7 @@
 // lib/analysis.js
-// AI analysis using direct OpenAI API calls, fallback to demo analysis
+// AI analysis 
 
-// Create analysis prompt for OpenAI
+// Create analysis prompt 
 function createAnalysisPrompt(sessionData) {
   return `As a professional public speaking coach, analyze this practice session and provide detailed feedback:
 
@@ -30,11 +30,11 @@ Keep feedback encouraging, specific, and actionable.`;
 
 export async function analyzeSession(sessionData) {
   try {
-    // Try Hugging Face first (free)
+    // Try Hugging Face first 
     const hfResult = await tryHuggingFaceAnalysis(sessionData);
     if (hfResult) return hfResult;
 
-    // Fallback to Gemini (free tier)
+    // Fallback to Gemini 
     const geminiResult = await tryGeminiAnalysis(sessionData);
     if (geminiResult) return geminiResult;
 
@@ -139,7 +139,6 @@ async function tryHuggingFaceAnalysis(sessionData) {
 
     const prompt = createAnalysisPrompt(sessionData);
     
-    // Using a simpler, more available model
     const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-small', {
       method: 'POST',
       headers: {
