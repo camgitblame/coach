@@ -141,5 +141,5 @@ The app is deployed with Vercel at https://pscoach.vercel.app/
 - Voice interaction works best on web browsers
 - Microphone permission is required for voice coaching
 - Chrome and Firefox recommended for WebRTC
-- Post-session analysis works with free Google Gemini and Hugging Face APIs. Demo analysis available when no API keys are provided.
+- Post-session analysis works with Google Gemini, Hugging Face API and OpenAI API. Demo analysis is available when no API keys are provided.
 
