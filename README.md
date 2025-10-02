@@ -1,12 +1,12 @@
 # PS Coach: AI Public Speaking Coach
 
-A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM analysis (Gemini, Hugging Face, OpenAI) for public speaking practice.
+A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM analysis (Gemini, Hugging Face, OpenAI) to practice public speaking.
 
 ## Features
 
 - Modes for different public speaking tasks: Elevator Pitch, Lightning Talk, Product Demo, Project Update, Thesis Defense
 - Live coaching while users speak using ElevenLabs AI agent
-- Simple session setup: topic, duration, and focus areas
+- Simple setup for a practice session: topic, duration, and focus areas
 - Post-session analysis with multiple LLM options:
   - Google Gemini 
   - Hugging Face DialoGPT 
