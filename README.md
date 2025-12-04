@@ -6,7 +6,7 @@ A React Native Expo app with conversational AI coaching, multi-model LLM analysi
 
 - Modes for different public speaking tasks: Elevator Pitch, Lightning Talk, Product Demo, Project Update, Thesis Defense
 - Live coaching while users speak using ElevenLabs AI agent
-- Simple session setup: topic, duration, and focus areas
+- Simple setup for a practice session: topic, duration, and focus areas
 - Post-session analysis with multiple LLM options:
   - Google Gemini 
   - Hugging Face DialoGPT 
