@@ -28,8 +28,7 @@ A React Native Expo app with conversational AI coaching, multi-model LLM analysi
 - WebRTC 
 - Google Gemini 1.5 Flash 
 - Hugging Face DiabloGPT
-- OpenAI GPT-4o-mini 
-
+- OpenAI GPT-4o-mini (Structured Outputs API)
 
 ## Quick Start
 
