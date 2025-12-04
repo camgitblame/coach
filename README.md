@@ -1,6 +1,6 @@
 # PS Coach: AI Public Speaking Coach
 
-A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM analysis (Gemini, Hugging Face, OpenAI) for public speaking practice.
+A React Native Expo app with conversational AI coaching, multi-model LLM analysis (Gemini, Hugging Face, OpenAI) and AI Agent for public speaking practice.
 
 ## Features
 
@@ -11,7 +11,11 @@ A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM an
   - Google Gemini 
   - Hugging Face DialoGPT 
   - OpenAI GPT-3.5-turbo
-  - Demo analysis 
+- AI Practice Agent (powered by OpenAI GPT-4o-mini):
+  - 1-week practice plan with daily exercises
+  - Curated learning resources (books, videos, courses, articles)
+  - Customizable by skill level
+
 
 ## Tech Stack
 
@@ -24,8 +28,8 @@ A React Native Expo app with ElevenLabs voice AI coaching and multi-model LLM an
 - WebRTC 
 - Google Gemini 1.5 Flash 
 - Hugging Face DiabloGPT
-- OpenAI GPT-3.5-turbo 
-- LangChain integration
+- OpenAI GPT-4o-mini 
+
 
 ## Quick Start
 
@@ -63,34 +67,6 @@ npx expo start
 npx expo start --web
 ```
 
-## How to Use
-
-1. **Choose a public speaking mode:**
-   - Elevator Pitch: Quick personal/product introduction
-   - Lightning Talk: Concise technical presentation
-   - Product Demo: Software or product walkthrough
-   - Project Update: Status report for teams
-   - Thesis Defense: Academic argument presentation
-
-2. **Configure your session:**
-   - **Topic**: What you'll be speaking about
-   - **Your name**: For personalized coaching
-   - **Duration**: Target length (30 seconds to 10 minutes)
-   - **Focus areas**: Choose from Clarity, Structure, Pace, Filler Words
-
-3. **Practice with live AI coaching:**
-   - Allow microphone access when prompted
-   - The AI coach greets you and guides the session
-   - Speak naturally about your topic
-   - Receive real-time voice guidance
-
-4. **Get AI-powered analysis:**
-   - After each session, receive feedback on:
-      - **Strengths**: What you did well
-      - **Improvements**: Specific areas to work on
-      - **Next Steps**: Actionable recommendations
-      - **Score**: Performance rating out of 10
-
 ## Project Structure
 
 ```
@@ -106,6 +82,7 @@ coachAI/
 │   ├── lib/            # Utility modules
 │   │   ├── config.js   # ElevenLabs agent config
 │   │   ├── analysis.js # AI analysis (Gemini, Hugging Face, OpenAI)
+│   │   ├── practiceAgent.js # OpenAI GPT-4o-mini practice agent with curated resources
 │   │   ├── voice.web.js    # Web voice integration
 │   │   └── voice.native.js # Native voice integration
 │   └── web-dist/       # Web export output 
@@ -122,9 +99,7 @@ npm start
 npx expo start
 
 # Run on platforms
-npx expo start --web     # Web browser
-npx expo start --ios     # iOS simulator  
-npx expo start --android # Android emulator
+npx expo start --web     #
 
 # Build for production web
 npm run build:web
@@ -141,5 +116,4 @@ The app is deployed with Vercel at https://pscoach.vercel.app/
 - Voice interaction works best on web browsers
 - Microphone permission is required for voice coaching
 - Chrome and Firefox recommended for WebRTC
-- Post-session analysis works with free Google Gemini and Hugging Face APIs. Demo analysis available when no API keys are provided.
 

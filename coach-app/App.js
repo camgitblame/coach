@@ -1,9 +1,10 @@
 // coach-app/App.js
 import React, { useMemo, useRef, useState, useEffect } from "react";
-import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Linking } from "react-native";
+import { Platform, SafeAreaView, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Linking, ActivityIndicator } from "react-native";
 import { useConversation } from "@elevenlabs/react";
 import Svg, { Path } from "react-native-svg";
 import { analyzeSession } from "./lib/analysis";
+import { createPracticeAgent, formatAgentResponse } from "./lib/practiceAgent";
 
 // ===== THEME 
 const theme = {
@@ -227,6 +228,14 @@ export default function App() {
   const [sessionAnalysis, setSessionAnalysis] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Practice Agent state
+  const [showAgentResults, setShowAgentResults] = useState(false);
+  const [agentData, setAgentData] = useState(null);
+  const [loadingAgent, setLoadingAgent] = useState(false);
+  const [userLevel, setUserLevel] = useState("intermediate");
+  const [timeCommitment, setTimeCommitment] = useState(15);
+  const [bookmarkedResources, setBookmarkedResources] = useState([]);
+
   const convo = useConversation({
     onConnect: () => console.log("connected"),
     onDisconnect: () => console.log("disconnected"),
@@ -324,6 +333,56 @@ export default function App() {
     }
   }
 
+  async function handleGeneratePlan() {
+    if (!modeKey) {
+      alert("Please select a speaking mode first");
+      return;
+    }
+    
+    if (focusAreas.length === 0) {
+      alert("Please select at least one focus area");
+      return;
+    }
+
+    setLoadingAgent(true);
+    
+    try {
+      const result = await createPracticeAgent({
+        mode: mode.label,
+        topic,
+        focusAreas,
+        userLevel,
+        timeCommitment,
+        userName
+      });
+      
+      const formatted = formatAgentResponse(result);
+      setAgentData(formatted);
+      setShowAgentResults(true);
+    } catch (error) {
+      console.error("Practice agent error:", error);
+      alert("Failed to generate practice plan. Please check your OpenAI API key in .env file.");
+    } finally {
+      setLoadingAgent(false);
+    }
+  }
+
+  function toggleBookmark(resource) {
+    const resourceKey = `${resource.title}-${resource.url}`;
+    const isBookmarked = bookmarkedResources.some(r => `${r.title}-${r.url}` === resourceKey);
+    
+    if (isBookmarked) {
+      setBookmarkedResources(bookmarkedResources.filter(r => `${r.title}-${r.url}` !== resourceKey));
+    } else {
+      setBookmarkedResources([...bookmarkedResources, resource]);
+    }
+  }
+
+  function isBookmarked(resource) {
+    const resourceKey = `${resource.title}-${resource.url}`;
+    return bookmarkedResources.some(r => `${r.title}-${r.url}` === resourceKey);
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView contentContainerStyle={styles.container}>
@@ -392,9 +451,50 @@ export default function App() {
               </Chip>
             ))}
           </View>
+
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionLabel}>Your Level</Text>
+          <View style={styles.rowWrap}>
+            {["beginner", "intermediate", "advanced"].map(level => (
+              <Chip
+                key={level}
+                active={userLevel === level}
+                onPress={() => setUserLevel(level)}
+                style={{ marginRight: theme.space2, marginBottom: theme.space2 }}
+              >
+                {level.charAt(0).toUpperCase() + level.slice(1)}
+              </Chip>
+            ))}
+          </View>
+
+          <Text style={[styles.sectionLabel, { marginTop: theme.space5 }]}>Daily Practice Time</Text>
+          <View style={styles.rowWrap}>
+            {[10, 15, 20, 30].map(time => (
+              <Chip
+                key={time}
+                active={timeCommitment === time}
+                onPress={() => setTimeCommitment(time)}
+                style={{ marginRight: theme.space2, marginBottom: theme.space2 }}
+              >
+                {time} min
+              </Chip>
+            ))}
+          </View>
         </Card>
 
         <View style={styles.divider} />
+
+        {/* Practice Agent Button */}
+        <Button 
+          variant="accent" 
+          size="large" 
+          onPress={handleGeneratePlan}
+          disabled={loadingAgent || convo.status === "connected"}
+          style={{ marginBottom: theme.space4 }}
+        >
+          {loadingAgent ? "Generating Your Plan..." : "AI Practice Agent"}
+        </Button>
 
         {/* Controls */}
         <View style={styles.controlsRow}>
@@ -456,6 +556,273 @@ export default function App() {
               <Text style={styles.analysisText}>{sessionAnalysis}</Text>
             )}
           </Card>
+        )}
+
+        {/* AI Practice Agent Loading */}
+        {loadingAgent && (
+          <Card elevated style={{ marginTop: theme.space4 }}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.accent} />
+              <Text style={styles.loadingTitle}>Generating Your Practice Plan...</Text>
+            </View>
+          </Card>
+        )}
+
+        {/* AI Practice Agent Results */}
+        {showAgentResults && agentData && (
+          <View style={{ marginTop: theme.space4 }}>
+            {/* Header */}
+            <Card elevated>
+              <View style={styles.agentHeader}>
+                <Text style={styles.agentTitle}>Your Personalized Practice Plan</Text>
+                <TouchableOpacity 
+                  onPress={() => setShowAgentResults(false)}
+                  style={styles.closeButton}
+                >
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.agentSubheader}>Powered by AI - Tailored to your goals</Text>
+            </Card>
+
+            {/* Exercises Cards */}
+            {agentData.exercises && agentData.exercises.length > 0 && (
+              <View style={{ marginTop: theme.space3 }}>
+                <Text style={styles.sectionHeader}>Personalized Exercises</Text>
+                {agentData.exercises.map((exercise, index) => (
+                  <Card key={index} elevated style={styles.exerciseCard}>
+                    <View style={styles.exerciseHeader}>
+                      <Text style={styles.exerciseName}>{exercise.name}</Text>
+                      <View style={styles.exerciseMeta}>
+                        <View style={[
+                          styles.difficultyBadge,
+                          exercise.difficulty === 'Beginner' && styles.difficultyBeginner,
+                          exercise.difficulty === 'Intermediate' && styles.difficultyIntermediate,
+                          exercise.difficulty === 'Advanced' && styles.difficultyAdvanced,
+                        ]}>
+                          <Text style={styles.difficultyText}>{exercise.difficulty}</Text>
+                        </View>
+                        <Text style={styles.durationText}>⏱️ {exercise.duration}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.exerciseDescription}>{exercise.description}</Text>
+                  </Card>
+                ))}
+              </View>
+            )}
+
+            {/* Practice Plan Cards */}
+            {agentData.practicePlan && agentData.practicePlan.length > 0 && (
+              <View style={{ marginTop: theme.space4 }}>
+                <Card elevated>
+                  <Text style={styles.sectionHeader}>1-Week Practice Plan</Text>
+                  <Text style={styles.planSubheader}>Follow this progressive journey to master your {mode.label}</Text>
+                  
+                  {/* Progress Timeline */}
+                  <View style={styles.timeline}>
+                    {agentData.practicePlan.map((day, index) => (
+                      <View key={index} style={styles.timelineItem}>
+                        {/* Timeline Node */}
+                        <View style={styles.timelineNodeContainer}>
+                          <View style={styles.timelineNode}>
+                            <Text style={styles.timelineNodeText}>{index + 1}</Text>
+                          </View>
+                          {index < agentData.practicePlan.length - 1 && (
+                            <View style={styles.timelineConnector} />
+                          )}
+                        </View>
+                        
+                        {/* Day Content */}
+                        <View style={styles.timelineContent}>
+                          <View style={styles.timelineDayHeader}>
+                            <Text style={styles.timelineDayLabel}>{day.day}</Text>
+                            <View style={styles.timelineFocusBadge}>
+                              <Text style={styles.timelineFocusText}>{day.focus}</Text>
+                            </View>
+                          </View>
+                          
+                          {day.exercises && (
+                            <View style={styles.timelineSection}>
+                              <Text style={styles.timelineSectionLabel}>🎯 Exercises</Text>
+                              <Text style={styles.timelineSectionText}>{day.exercises}</Text>
+                            </View>
+                          )}
+                          
+                          <View style={styles.timelineSection}>
+                            <Text style={styles.timelineSectionLabel}>📋 Activities</Text>
+                            <Text style={styles.timelineSectionText}>{day.activities}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </Card>
+              </View>
+            )}
+
+            {/* Resources Cards */}
+            {agentData.resources && (
+              <View style={{ marginTop: theme.space4 }}>
+                <Text style={styles.sectionHeader}>Learning Resources</Text>
+
+                {agentData.resources.books && agentData.resources.books.length > 0 && (
+                  <View style={{ marginTop: theme.space2 }}>
+                    <Text style={styles.resourceCategory}>Books</Text>
+                    {agentData.resources.books.map((book, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        onPress={() => Linking.openURL(book.url)}
+                        activeOpacity={0.7}
+                      >
+                        <Card elevated style={styles.resourceCard}>
+                          <View style={styles.resourceContent}>
+                            <Text style={styles.resourceThumbnail}>{book.thumbnail}</Text>
+                            <View style={styles.resourceInfo}>
+                              <Text style={styles.resourceTitle}>{book.title}</Text>
+                              <Text style={styles.resourceAuthor}>by {book.author}</Text>
+                              <Text style={styles.resourceWhy}>{book.why}</Text>
+                            </View>
+                            <TouchableOpacity 
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark({ ...book, type: 'book' });
+                              }}
+                              style={styles.bookmarkButton}
+                            >
+                              <Text style={styles.bookmarkIcon}>
+                                {isBookmarked({ ...book, type: 'book' }) ? '★' : '☆'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {agentData.resources.videos && agentData.resources.videos.length > 0 && (
+                  <View style={{ marginTop: theme.space3 }}>
+                    <Text style={styles.resourceCategory}>Videos</Text>
+                    {agentData.resources.videos.map((video, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        onPress={() => Linking.openURL(video.url)}
+                        activeOpacity={0.7}
+                      >
+                        <Card elevated style={styles.resourceCard}>
+                          <View style={styles.resourceContent}>
+                            <Text style={styles.resourceThumbnail}>{video.thumbnail}</Text>
+                            <View style={styles.resourceInfo}>
+                              <Text style={styles.resourceTitle}>{video.title}</Text>
+                              <Text style={styles.resourceWhy}>{video.description}</Text>
+                            </View>
+                            <TouchableOpacity 
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark({ ...video, type: 'video' });
+                              }}
+                              style={styles.bookmarkButton}
+                            >
+                              <Text style={styles.bookmarkIcon}>
+                                {isBookmarked({ ...video, type: 'video' }) ? '★' : '☆'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {agentData.resources.courses && agentData.resources.courses.length > 0 && (
+                  <View style={{ marginTop: theme.space3 }}>
+                    <Text style={styles.resourceCategory}>Courses</Text>
+                    {agentData.resources.courses.map((course, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        onPress={() => Linking.openURL(course.url)}
+                        activeOpacity={0.7}
+                      >
+                        <Card elevated style={styles.resourceCard}>
+                          <View style={styles.resourceContent}>
+                            <Text style={styles.resourceThumbnail}>{course.thumbnail}</Text>
+                            <View style={styles.resourceInfo}>
+                              <Text style={styles.resourceTitle}>{course.name}</Text>
+                              <Text style={styles.resourceAuthor}>{course.platform}</Text>
+                              <Text style={styles.resourceWhy}>{course.focus}</Text>
+                            </View>
+                            <TouchableOpacity 
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark({ ...course, type: 'course' });
+                              }}
+                              style={styles.bookmarkButton}
+                            >
+                              <Text style={styles.bookmarkIcon}>
+                                {isBookmarked({ ...course, type: 'course' }) ? '★' : '☆'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {agentData.resources.articles && agentData.resources.articles.length > 0 && (
+                  <View style={{ marginTop: theme.space3 }}>
+                    <Text style={styles.resourceCategory}>Articles</Text>
+                    {agentData.resources.articles.map((article, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        onPress={() => Linking.openURL(article.url)}
+                        activeOpacity={0.7}
+                      >
+                        <Card elevated style={styles.resourceCard}>
+                          <View style={styles.resourceContent}>
+                            <Text style={styles.resourceThumbnail}>{article.thumbnail}</Text>
+                            <View style={styles.resourceInfo}>
+                              <Text style={styles.resourceTitle}>{article.title}</Text>
+                              <Text style={styles.resourceAuthor}>{article.author}</Text>
+                              <Text style={styles.resourceWhy}>{article.description}</Text>
+                            </View>
+                            <TouchableOpacity 
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark({ ...article, type: 'article' });
+                              }}
+                              style={styles.bookmarkButton}
+                            >
+                              <Text style={styles.bookmarkIcon}>
+                                {isBookmarked({ ...article, type: 'article' }) ? '★' : '☆'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </Card>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Action Button */}
+            <Card elevated style={{ marginTop: theme.space4 }}>
+              <View style={styles.agentActions}>
+                <Button 
+                  variant="primary" 
+                  size="large" 
+                  onPress={() => {
+                    setShowAgentResults(false);
+                    onBegin();
+                  }}
+                  disabled={convo.status === "connected"}
+                >
+                  Start Practice Session
+                </Button>
+              </View>
+            </Card>
+          </View>
         )}
 
         {/* Credit Footer */}
@@ -697,6 +1064,21 @@ const styles = StyleSheet.create({
     letterSpacing: 0.25,
     textAlign: "left",
   },
+  
+  // Loading UI
+  loadingContainer: {
+    padding: theme.space6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingTitle: {
+    color: theme.text,
+    fontSize: 16,
+    fontWeight: "500",
+    marginTop: theme.space4,
+    textAlign: "center",
+  },
+  
   footer: {
     alignItems: "center",
     paddingVertical: theme.space6,
@@ -723,5 +1105,311 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     textTransform: "uppercase",
     textDecorationLine: "underline",
+  },
+  agentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.space2,
+  },
+  agentTitle: {
+    color: theme.primary,
+    fontSize: 20,
+    fontWeight: "600",
+    letterSpacing: 0.25,
+    flex: 1,
+  },
+  closeButton: {
+    paddingHorizontal: theme.space3,
+    paddingVertical: theme.space2,
+    backgroundColor: theme.surfaceVariant,
+    borderRadius: theme.radiusSm,
+  },
+  closeButtonText: {
+    color: theme.text,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  agentSubheader: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    marginBottom: theme.space4,
+    lineHeight: 18,
+  },
+  agentSection: {
+    marginBottom: theme.space5,
+    paddingLeft: theme.space3,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.accent,
+  },
+  agentSectionTitle: {
+    color: theme.text,
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: theme.space3,
+    letterSpacing: 0.15,
+  },
+  agentSectionContent: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
+    letterSpacing: 0.25,
+  },
+  agentActions: {
+    marginTop: theme.space4,
+    paddingTop: theme.space4,
+    borderTopWidth: 1,
+    borderTopColor: theme.stroke,
+  },
+  
+  // New card-based styles
+  sectionHeader: {
+    color: theme.text,
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: theme.space3,
+    letterSpacing: 0.25,
+  },
+  
+  // Exercise Cards
+  exerciseCard: {
+    marginBottom: theme.space3,
+    padding: theme.space4,
+  },
+  exerciseHeader: {
+    marginBottom: theme.space3,
+  },
+  exerciseName: {
+    color: theme.text,
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: theme.space2,
+  },
+  exerciseMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space2,
+  },
+  difficultyBadge: {
+    paddingHorizontal: theme.space3,
+    paddingVertical: theme.space1,
+    borderRadius: theme.radiusSm,
+  },
+  difficultyBeginner: {
+    backgroundColor: "#4CAF50",
+  },
+  difficultyIntermediate: {
+    backgroundColor: "#FF9800",
+  },
+  difficultyAdvanced: {
+    backgroundColor: "#F44336",
+  },
+  difficultyText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  durationText: {
+    color: theme.textSecondary,
+    fontSize: 13,
+  },
+  exerciseDescription: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  
+  // Practice Plan Timeline
+  planSubheader: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    marginBottom: theme.space4,
+    lineHeight: 20,
+  },
+  timeline: {
+    paddingTop: theme.space2,
+  },
+  timelineItem: {
+    flexDirection: "row",
+    marginBottom: theme.space2,
+  },
+  timelineNodeContainer: {
+    alignItems: "center",
+    marginRight: theme.space3,
+    width: 40,
+  },
+  timelineNode: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.accent,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  timelineNodeText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  timelineConnector: {
+    width: 3,
+    flex: 1,
+    backgroundColor: theme.accent,
+    opacity: 0.3,
+    marginTop: theme.space1,
+  },
+  timelineContent: {
+    flex: 1,
+    paddingBottom: theme.space4,
+  },
+  timelineDayHeader: {
+    marginBottom: theme.space3,
+  },
+  timelineDayLabel: {
+    color: theme.text,
+    fontSize: 17,
+    fontWeight: "700",
+    marginBottom: theme.space2,
+  },
+  timelineFocusBadge: {
+    backgroundColor: theme.surfaceVariant,
+    paddingHorizontal: theme.space3,
+    paddingVertical: theme.space1 + 2,
+    borderRadius: theme.radiusSm,
+    alignSelf: "flex-start",
+    borderLeftWidth: 3,
+    borderLeftColor: theme.accent,
+  },
+  timelineFocusText: {
+    color: theme.accent,
+    fontSize: 13,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  timelineSection: {
+    marginBottom: theme.space3,
+  },
+  timelineSectionLabel: {
+    color: theme.text,
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: theme.space1,
+  },
+  timelineSectionText: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  
+  // Old Practice Plan Cards (kept for backwards compatibility)
+  weekLabel: {
+    color: theme.accent,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: theme.space2,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  dayCard: {
+    marginBottom: theme.space2,
+    padding: theme.space3,
+  },
+  dayHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.space2,
+  },
+  dayLabel: {
+    color: theme.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  dayFocus: {
+    color: theme.accent,
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  dayActivities: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  dayExercises: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: theme.space2,
+  },
+  dayExercisesLabel: {
+    color: theme.accent,
+    fontWeight: "600",
+  },
+  
+  // Resource Cards
+  resourceCategory: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: theme.space2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  resourceCard: {
+    marginBottom: theme.space3,
+    padding: theme.space3,
+  },
+  resourceContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: theme.space3,
+  },
+  resourceThumbnail: {
+    fontSize: 40,
+    width: 60,
+    textAlign: "center",
+  },
+  resourceInfo: {
+    flex: 1,
+  },
+  resourceTitle: {
+    color: theme.text,
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: theme.space1,
+  },
+  resourceAuthor: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    marginBottom: theme.space2,
+  },
+  resourceWhy: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  bookmarkButton: {
+    padding: theme.space2,
+  },
+  bookmarkIcon: {
+    fontSize: 24,
+    color: theme.accent,
+  },
+  
+  // Quick Start
+  quickStartLabel: {
+    color: theme.text,
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: theme.space2,
+  },
+  quickStartItem: {
+    color: theme.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: theme.space2,
   },
 });
