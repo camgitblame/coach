@@ -1,6 +1,6 @@
 # PS Coach: AI Public Speaking Coach
 
-A React Native Expo app with conversational AI coaching, multi-model LLM analysis (Gemini, Hugging Face, OpenAI) and AI Agent for public speaking practice.
+A React Native Expo app with conversational AI coaching, multi-model LLM analysis (Gemini, Hugging Face, OpenAI) and a practice planning AI agent for public speaking practice.
 
 ## Features
 
